@@ -1,9 +1,23 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ConfigOptions>
   <urlBase></urlBase>
-  <deleteDownloadsOnSuccess>false</deleteDownloadsOnSuccess>
-  <showInfo>true</showInfo>
+  <deleteDownloadsOnSuccess default="true">true</deleteDownloadsOnSuccess>
+  <showInfo default="true">true</showInfo>
   <server></server>
+  <database></database>
+  <schema default="dbo">dbo</schema>
+  <tableName default=""></tableName>
   <user></user>
   <password></password>
+  <ctidLocation note="If the server is not the same one, be sure to link them and be aware that the operation will be slow">
+    <server default="doug">doug</server>
+    <database default="BaoundaryGEO">BoundaryGEO</database>
+    <schema default="BoundaryGEO">BoundaryGEO</schema>
+    <tableName descr="This can also be a view" default="CurrentTract">CurrentTract</tableName>
+    <shapeColumn default="Shape">Shape</shapeColumn>
+    <ctidfpColumn descr="The column containing the Census Tract ID" default="GEOID2">GEOID2</ctidfpColumn>
+    <user></user>
+    <password></password>
+  </ctidLocation>
+  <srid descr="The Spatial Reference Identifier to use, must match what is in the ctid table" default="4326">4326</srid>
 </ConfigOptions>

@@ -22,4 +22,10 @@
     <PackageReference Include="System.Data.SqlClient" Version="4.7.0-preview8.19405.3" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Config.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
