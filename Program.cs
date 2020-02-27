@@ -38,27 +38,17 @@ namespace ConsoleTemplate
             // Read Config.xml            
             //string zipFile = ConfigUtils.GetConfigValue("zipFile");
             string urlBase = ConfigUtils.GetConfigValue("urlBase");
-            string dbServer = ConfigUtils.GetConfigValue("server");
-            string dbUser = ConfigUtils.GetConfigValue("user");
-            string dbPass = ConfigUtils.GetConfigValue("password");
-            string database = ConfigUtils.GetConfigValue("database");
-            string schema = ConfigUtils.GetConfigValue("schema");
-            string table = ConfigUtils.GetConfigValue("tableName");
+            var contextSettings = ConfigUtils.ParseConnectionSettings<DbConnectionSettings>("dataTable");
             bool deleteDownloads = ConfigUtils.GetConfigBool("deleteDownloadsOnSuccess");
 
             //CTID Location
-            CTI.Server = ConfigUtils.GetConfigValue("ctidLocation", "server");
-            CTI.UserName = ConfigUtils.GetConfigValue("ctidLocation", "user");
-            CTI.Password = ConfigUtils.GetConfigValue("ctidLocation", "password");
-            CTI.Database = ConfigUtils.GetConfigValue("ctidLocation", "database");
-            CTI.Schema = ConfigUtils.GetConfigValue("ctidLocation", "schema");
-            CTI.Table = ConfigUtils.GetConfigValue("ctidLocation", "tableName");
-            CTI.Column = ConfigUtils.GetConfigValue("ctidLocation", "ctidfpColumn");
-            CTI.ShapeColumn = ConfigUtils.GetConfigValue("ctidLocation", "shapeColumn");
+            var ctiSettings = ConfigUtils.ParseConnectionSettings<CTI>("ctidLocation");
+            ctiSettings.Column = ConfigUtils.GetConfigValue("ctidLocation", "ctidfpColumn");
+            ctiSettings.ShapeColumn = ConfigUtils.GetConfigValue("ctidLocation", "shapeColumn");
             // End CTID
 
             // Windoze can use Windows Auth, so user and password are not required
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && (string.IsNullOrEmpty(dbUser) || string.IsNullOrEmpty(dbPass) || CTI.IsUserOrPasswordNullOrEmpty))
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && (contextSettings.IsUserOrPasswordEmpty || ctiSettings.IsUserOrPasswordEmpty))
             {
                 PrintMessageAndWait(NO_CREDENTIALS);
                 return -7;
@@ -85,21 +75,14 @@ namespace ConsoleTemplate
 
             DownloadUtils.CreateDownloadTempDirectory();
 
-            // Init the database
-            BaseContext.Server = dbServer;
-            BaseContext.UserName = dbUser;
-            BaseContext.Password = dbPass;
-            BaseContext.Schema = schema;
-            BaseContext.TableName = table;
-            BaseContext.DatabaseToUse = database;
 
             // This is only used for testing/LocalDB
-            //using (var ctx = new Context())
-            //{
-            //    ctx.EnsureDatabase();
-            //}
+            //using (var ctx = new Context(contextSettings))
+                //{
+                //    ctx.EnsureDatabase();
+                //}
 
-            if (showInfo)
+                if (showInfo)
             {
                 if (!string.IsNullOrEmpty(urlBase))
                 {
@@ -130,7 +113,7 @@ namespace ConsoleTemplate
             {
                 for (int i = 0; i <= 100; i++)
                 {
-                    await DataParser.ParseFileAsync<IKeyed<object>>(DownloadUtils.GetLargestFileInDownload(), progress.Report);
+                    await DataParser.ParseFileAsync<IKeyed<object>>(DownloadUtils.GetLargestFileInDownload(), progress.Report, contextSettings);
                     progress.Report((double)i / 100);
                     System.Threading.Thread.Sleep(20);
                 }

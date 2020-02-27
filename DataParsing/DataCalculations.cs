@@ -8,10 +8,10 @@ namespace ConsoleTemplate.DataParsing
     {
         internal const int COMMAND_TIMEOUT = 600;
 
-        internal static async Task<int> SetCTIDFP()
+        internal static async Task<int> SetCTIDFP(DbConnectionSettings settings)
         {
             // We subtract 10 from the cutoff year here so that we can calculate the 10 year deltas
-            using SqlConnection conn = new SqlConnection(Context.CONNECTION_STRING);
+            using SqlConnection conn = new SqlConnection(settings.CONNECTION_STRING);
             try
             {
                 conn.Open();

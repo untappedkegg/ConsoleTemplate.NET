@@ -15,9 +15,9 @@ namespace ConsoleTemplate.DataParsing
         private const int BATCH_SIZE = 7_500;
         private const char DELIMITER = '\t';
 
-        private static int SaveData<T>(IEnumerable<T> data) where T : class, IKeyed<object>
+        private static int SaveData<T>(IEnumerable<T> data, DbConnectionSettings settings) where T : class, IKeyed<object>
         {
-            using var context = new Context();
+            using var context = new Context(settings);
             context.AddRange(data);
             return context.SaveChanges();
         }
@@ -27,10 +27,10 @@ namespace ConsoleTemplate.DataParsing
             public object Key { get; set; } = new object();
         }
 
-        internal static Task<TaskStatus> ParseFile(Stream fileStream)
+        internal static Task<TaskStatus> ParseFile(Stream fileStream, DbConnectionSettings settings)
         {
             static Carable createRecord(string seriesId, string year, string month, string value) => new Carable();
-            return ParseData(fileStream, data => SaveData(data), createRecord);
+            return ParseData(fileStream, data => SaveData(data, settings), createRecord);
         }
 
         private static Task<TaskStatus> ParseData<T>(Stream fileStream, Func<IEnumerable<T>, int> func, Func<string, string, string, string, T> createRecord) where T : class, IKeyed<object>

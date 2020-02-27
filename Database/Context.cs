@@ -8,13 +8,9 @@ namespace ConsoleTemplate.Database
 {
     internal class Context : BaseContext
     {
-#if DEBUG
-        internal static string CONNECTION_STRING => $@"Data Source=(LocalDB)\MSSQLLocalDB;Database={DatabaseToUse};MultipleActiveResultSets=True;Integrated Security=true;";
-#else
-        internal static string CONNECTION_STRING => RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ?
-                     $"Server={Server};Database={DatabaseToUse};User ID={UserName};Password={Password};MultipleActiveResultSets=True;Integrated Security=true;" :
-                     $"Server={Server};Database={DatabaseToUse};User ID={UserName};Password={Password};MultipleActiveResultSets=True;";
-#endif
+#pragma warning disable CS8618 // Non-nullable field is uninitialized. Consider declaring as nullable.
+        public Context(DbConnectionSettings connectionSettings) : base(connectionSettings) { }
+
         internal void EnsureDatabase()
         {
             // This is equivalent to the Framework
@@ -35,20 +31,14 @@ namespace ConsoleTemplate.Database
 #pragma warning restore CS8618 // Non-nullable field is uninitialized.
 
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            // Tell it we're using SqlServer and the relevant info
-            optionsBuilder.UseSqlServer(CONNECTION_STRING).EnableDetailedErrors();
-            base.OnConfiguring(optionsBuilder);
-        }
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Set the schema and table name via the fluent api
-            modelBuilder.HasDefaultSchema(Schema);
-            modelBuilder.Entity<IKeyed<object>>().ToTable(TableName);
+            modelBuilder.Entity<IKeyed<object>>().ToTable(settings.Table);
+
+            modelBuilder.HasDefaultSchema(settings.Schema);
 
             base.OnModelCreating(modelBuilder);
         }
+#pragma warning restore CS8618 // Non-nullable field is uninitialized. Consider declaring as nullable.
     }
 }

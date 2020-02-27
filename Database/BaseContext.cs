@@ -2,13 +2,19 @@
 
 namespace ConsoleTemplate.Database
 {
-    internal abstract class BaseContext : DbContext
+   internal abstract class BaseContext : DbContext
     {
-        protected internal static string? UserName { protected get; set; } = string.Empty;
-        protected internal static string Password { protected get; set; } = string.Empty;
-        protected internal static string Server { protected get; set; } = string.Empty;
-        internal static string DatabaseToUse { get; set; } = string.Empty;
-        internal static string TableName { get; set; } = string.Empty;
-        internal static string Schema { get; set; } = string.Empty;
+        protected readonly DbConnectionSettings settings;
+        public BaseContext(DbConnectionSettings connectionSettings) : base()// where T : DbConnectionSettings 
+        {
+            settings = connectionSettings;
+        }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            // Tell it we're using SqlServer and the relevant info
+            optionsBuilder.UseSqlServer(settings.CONNECTION_STRING).EnableDetailedErrors();
+            base.OnConfiguring(optionsBuilder);
+        }
     }
 }

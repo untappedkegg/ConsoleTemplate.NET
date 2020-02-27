@@ -12,12 +12,12 @@ namespace ConsoleTemplate.DataParsing
         private const int BATCH_SIZE = 7_500;
         public const string GEOCODE_ADDRESS = "https://services.engagementnetwork.org/api-uploader/geocode";
 
-        internal static async Task<TaskStatus> ParseFileAsync<T>(string fileName, Action<double> updateProgress)
+        internal static async Task<TaskStatus> ParseFileAsync<T>(string fileName, Action<double> updateProgress, DbConnectionSettings settings)
         {
-            return await ParseDataAsync(fileName, updateProgress);
+            return await ParseDataAsync(fileName, updateProgress, settings);
         }
 
-        private static async Task<TaskStatus> ParseDataAsync(string fileName, Action<double> updateProgress)
+        private static async Task<TaskStatus> ParseDataAsync(string fileName, Action<double> updateProgress, DbConnectionSettings settings)
         {
             try
             {
@@ -25,7 +25,7 @@ namespace ConsoleTemplate.DataParsing
                 using (var stream = new StreamReader(fileName))
                 {
                     
-                    var ctx = new Context();
+                    var ctx = new Context(settings);
                     
                     await ctx.SaveChangesAsync();
                     updateProgress(4);

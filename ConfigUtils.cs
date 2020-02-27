@@ -1,4 +1,5 @@
-﻿using System.Xml;
+﻿using ConsoleTemplate.Database;
+using System.Xml;
 
 namespace ConsoleTemplate
 {
@@ -14,6 +15,11 @@ namespace ConsoleTemplate
             return GetNode(outerTag).SelectSingleNode(childTag).InnerText;
         }
 
+        private static string GetInnerNodeText(XmlNode node, string childTag)
+        {
+            return node.SelectSingleNode(childTag)?.InnerText ?? string.Empty;
+        }
+
         public static bool GetConfigBool(string tagName)
         {
             return bool.Parse(GetNode(tagName).InnerText);
@@ -22,20 +28,6 @@ namespace ConsoleTemplate
         public static bool GetConfigBool(string outerTag, string childTag)
         {
             return bool.Parse(GetNode(outerTag).SelectSingleNode(childTag).InnerText);
-        }
-
-        [System.Obsolete("This does not respect xml comments, it will simply grab all children", false)]
-        public static string[] GetConfigValues(string tagName)
-        {
-            var children = GetNode(tagName).ChildNodes;
-            string[] retVal = new string[children.Count];
-
-            for (int i = 0; i < children.Count; i++)
-            {
-                retVal[i] = children[i].InnerText;
-            }
-
-            return retVal;
         }
 
         public static string[] GetConfigValues(string outerTag, string childTag)
@@ -71,6 +63,21 @@ namespace ConsoleTemplate
         internal static int GetConfigInt(string outerTag, string childTag)
         {
             return int.Parse(GetNode(outerTag).SelectSingleNode(childTag).InnerText);
+        }
+
+        internal static T ParseConnectionSettings<T>(string configTag = "ConfigOptions") where T : DbConnectionSettings, new()
+        {
+            var configNode = GetNode(configTag);
+
+            return new T
+            {
+                Database = GetInnerNodeText(configNode, "database"),
+                UserName = GetInnerNodeText(configNode, "user"),
+                Password = GetInnerNodeText(configNode, "password"),
+                Server = GetInnerNodeText(configNode, "server"),
+                Schema = GetInnerNodeText(configNode, "schema"),
+                Table = GetInnerNodeText(configNode, "tableName")
+            };
         }
     }
 }
