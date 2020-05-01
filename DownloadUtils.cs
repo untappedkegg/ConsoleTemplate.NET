@@ -39,6 +39,10 @@ namespace ConsoleTemplate
             {
                 await client.DownloadFileTaskAsync(fileName, GetFilePath(fileName));
             }
+            catch (Exception)
+            {
+                Console.WriteLine($"Error downloading file: {url}/{fileName}");
+            }
             finally
             {
                 client.Dispose();

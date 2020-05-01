@@ -21,17 +21,25 @@ namespace ConsoleTemplate.DataParsing
         {
             try
             {
-
-                using (var stream = new StreamReader(fileName))
+                if (File.Exists(fileName))
                 {
-                    
-                    var ctx = new Context(settings);
-                    
-                    await ctx.SaveChangesAsync();
-                    updateProgress(4);
-                    ctx.Dispose();
+                    using (var stream = new StreamReader(fileName))
+                    {
+
+                        var ctx = new Context(settings);
+
+                        await ctx.SaveChangesAsync();
+                        updateProgress(4);
+                        ctx.Dispose();
+                    }
+                    return TaskStatus.RanToCompletion;
+
+
+                } else
+                {
+                    Console.WriteLine($"File Not Found: {fileName}");
+                    return TaskStatus.Canceled;
                 }
-                return TaskStatus.RanToCompletion;
 
             }
             catch (Exception e)

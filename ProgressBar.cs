@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.Text;
 using System.Threading;
 
@@ -10,7 +11,7 @@ namespace ConsoleTemplate
     /// </summary>
     public sealed class ProgressBar : IDisposable, IProgress<double>
     {
-        private const int blockCount = 10;
+        private int BlockCount => Math.Max(narrowProgressBar ? Console.WindowWidth / 2 - (appendText.Length + prependText.Length) : Console.WindowWidth - (appendText.Length + prependText.Length + 20), 15); //20;
         private readonly TimeSpan animationInterval = TimeSpan.FromSeconds(1.0 / 8);
         private const string animation = @"|/-\";
 
@@ -18,27 +19,40 @@ namespace ConsoleTemplate
 
         private double currentProgress = 0;
         private string currentText = string.Empty;
+        private string prependText = string.Empty;
+        private string appendText = string.Empty;
         private bool disposed = false;
         private int animationIndex = 0;
+        private readonly bool narrowProgressBar = true;
 
-        public ProgressBar()
+        public ProgressBar(bool narrowProgressBar = true, bool showInfo = true)
         {
             timer = new Timer(TimerHandler);
+            this.narrowProgressBar = narrowProgressBar;
 
             // A progress bar is only for temporary display in a console window.
             // If the console output is redirected to a file, draw nothing.
             // Otherwise, we'll end up with a lot of garbage in the target file.
-            if (!Console.IsOutputRedirected)
+            if (!Console.IsOutputRedirected && showInfo)
             {
                 ResetTimer();
             }
         }
 
-        public void Report(double decimalPercent)
+        public void Report([Range(0d, 1d)] double decimalPercent)
         {
             // Make sure value is in [0..1] range
             decimalPercent = Math.Max(0, Math.Min(1, decimalPercent));
             Interlocked.Exchange(ref currentProgress, decimalPercent);
+        }
+
+        public void Report([Range(0d, 1d)] double decimalPercent, string prependText = "", string appendText = "")
+        {
+            // Make sure value is in [0..1] range
+            decimalPercent = Math.Max(0, Math.Min(1, decimalPercent));
+            Interlocked.Exchange(ref currentProgress, decimalPercent);
+            Interlocked.Exchange(ref this.prependText, prependText);
+            Interlocked.Exchange(ref this.appendText, appendText);
         }
 
         private void TimerHandler(object? state)
@@ -47,9 +61,10 @@ namespace ConsoleTemplate
             {
                 if (disposed) return;
 
-                int progressBlockCount = (int)(currentProgress * blockCount);
+                int count = BlockCount;
+                int progressBlockCount = (int)(currentProgress * count);
                 int percent = (int)(currentProgress * 100);
-                string text = $"[{new string('#', progressBlockCount)}{new string('-', blockCount - progressBlockCount)}] {percent,3}% {animation[animationIndex++ % animation.Length]}";
+                string text = $"[{new string('#', progressBlockCount)}{new string('-', count - progressBlockCount)}] {percent,3}% {animation[animationIndex++ % animation.Length]}";
                 UpdateText(text);
 
                 ResetTimer();
@@ -58,23 +73,18 @@ namespace ConsoleTemplate
 
         private void UpdateText(string text)
         {
-            // Get length of common portion
-            int commonPrefixLength = 0;
-            int commonLength = Math.Min(currentText.Length, text.Length);
-            while (commonPrefixLength < commonLength && text[commonPrefixLength] == currentText[commonPrefixLength])
-            {
-                commonPrefixLength++;
-            }
-
             // Backtrack to the first differing character
             StringBuilder outputBuilder = new StringBuilder();
-            outputBuilder.Append('\b', currentText.Length - commonPrefixLength);
+            outputBuilder.Append('\b', currentText.Length);
 
             // Output new suffix
-            outputBuilder.Append(text.Substring(commonPrefixLength));
+            outputBuilder
+                .Append(prependText)
+                .Append(text)
+                .Append(appendText);
 
             // If the new text is shorter than the old one: delete overlapping characters
-            int overlapCount = currentText.Length - text.Length;
+            int overlapCount = currentText.Length - (prependText.Length + text.Length + appendText.Length);
             if (overlapCount > 0)
             {
                 outputBuilder.Append(' ', overlapCount);
@@ -82,7 +92,8 @@ namespace ConsoleTemplate
             }
 
             Console.Write(outputBuilder);
-            currentText = text;
+            currentText = outputBuilder.ToString();
+            //currentText = prependText + text + appendText;
         }
 
         private void ResetTimer()
@@ -98,6 +109,5 @@ namespace ConsoleTemplate
                 UpdateText(string.Empty);
             }
         }
-
     }
 }
